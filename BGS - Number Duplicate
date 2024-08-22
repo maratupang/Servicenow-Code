@@ -1,0 +1,36 @@
+var ga = new GlideAggregate('wm_task');
+ga.addAggregate('COUNT', 'number'); // Hitung jumlah kemunculan 'number'
+ga.groupBy('number');  // Kelompokkan berdasarkan 'number'
+ga.addHaving('COUNT', '>', 1);  // Hanya ambil yang jumlahnya lebih dari 1 (duplikat)
+// ga.addQuery("sys_created_on", ">=", today.subtractDays(1000));  // Jika diperlukan filter tanggal
+
+ga.query();
+
+var duplicates = [];
+while (ga.next()) {
+  var duplicateNumber = ga.number.toString(); // Ambil nilai 'number' yang duplikat
+  
+  // Cari semua record dengan 'number' tersebut
+  var gr = new GlideRecord('wm_task');
+  gr.addQuery('number', duplicateNumber);
+  gr.query();
+  
+  var duplicateRecords = [];
+  while (gr.next()) {
+    duplicateRecords.push(gr.sys_id.toString());
+  }
+
+  duplicates.push({
+    number: duplicateNumber,
+    records: duplicateRecords
+  });
+}
+
+if (duplicates.length > 0) {
+  gs.log("Nomor duplikat yang ditemukan:");
+  for (var i = 0; i < duplicates.length; i++) {
+    gs.log("Nomor: " + duplicates[i].number + ", Record: " + duplicates[i].records.join(", "));
+  }
+} else {
+  gs.log("Tidak ada nomor duplikat yang ditemukan.");
+}
